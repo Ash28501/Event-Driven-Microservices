@@ -46,6 +46,8 @@ Kafka
 - JWT Authentication
 - Event-driven architecture
 - Dead-letter queue pattern
+- Kubernetes (Deployments, Services, probes, Kustomize)
+- GitHub Actions CI (Ruff, pytest, kubeconform, image builds)
 
 ## Run Locally
 
@@ -91,6 +93,24 @@ curl http://localhost:8002/inventory/P1001
 curl http://localhost:8004/notifications
 ```
 
+### 5. Check end-to-end latency
+
+```bash
+curl http://localhost:8004/latency    # p50/p95/p99 from order creation to final status event
+```
+
+## Load Test
+
+```bash
+python loadtest/run_load_test.py --orders 2000 --concurrency 100
+```
+
+The script reports orders/sec accepted, Kafka events/sec processed, API latency, and **end-to-end latency**. End-to-end latency is measured server-side, from the order's `created_at` until the Notification Service consumes the final status event. It needs only the Python standard library.
+
+## Kubernetes
+
+The manifests in [`k8s/`](k8s/) deploy the whole platform to a local kind or minikube cluster. Every service has readiness and liveness probes and resource limits, and rolls out with zero downtime. See [`k8s/README.md`](k8s/README.md).
+
 ## Kafka Topics
 
 | Topic | Produced By | Consumed By |
@@ -102,24 +122,14 @@ curl http://localhost:8004/notifications
 | `payment.failed` | Payment Service | Notification Service |
 | `order.dlq` | Any failed service | Notification Service |
 
-## Resume Bullets
-
-- Architected an **event-driven microservices platform** using **Python, FastAPI, PostgreSQL, Kafka, Docker, REST APIs, and JWT**, decoupling Order, Inventory, Payment, and Notification services through asynchronous event streams.
-- Implemented Kafka-based event pipelines with retry-safe consumers, inventory reservation, simulated payment processing, and **dead-letter queue handling**, improving fault tolerance and service resilience.
-- Containerized five backend services using **Docker Compose**, integrated PostgreSQL persistence, and documented API workflows, enabling reproducible local deployment and production-style system design.
-
 ## Production-Grade Extensions
 
 You can extend this project with:
 
 - Prometheus and Grafana dashboards
 - Kafka UI
-- Debezium CDC from PostgreSQL outbox table
-- Outbox pattern
-- Idempotency keys
-- k6 load testing
-- Kubernetes manifests
-- GitHub Actions CI/CD
+- Transactional outbox + Debezium CDC (removes the DB-write/Kafka-publish dual write in Order Service)
+- Idempotency keys for consumers
 
 ## Project Structure
 
@@ -133,6 +143,10 @@ event-driven-microservices-python/
 ├── shared/
 ├── scripts/
 ├── docs/
+├── k8s/                 # Kubernetes manifests (kubectl apply -k k8s/)
+├── loadtest/            # load test with end-to-end latency
+├── tests/
+├── .github/workflows/   # CI
 ├── docker-compose.yml
 └── README.md
 ```
