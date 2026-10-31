@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-config
+  namespace: order-platform
+data:
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  DATABASE_URL: postgresql+psycopg2://appuser:apppassword@postgres:5432/ordersdb
+  ORDER_SERVICE_URL: http://order-service:8001
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-secrets
+  namespace: order-platform
+type: Opaque
+stringData:
+  JWT_SECRET: change-me-in-production
+  POSTGRES_PASSWORD: apppassword
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: order-platform
+data:
+  init.sql: "CREATE TABLE IF NOT EXISTS orders (\n    id SERIAL PRIMARY KEY,\n   \
+    \ customer_id VARCHAR(64) NOT NULL,\n    product_id VARCHAR(64) NOT NULL,\n  \
+    \  quantity INTEGER NOT NULL,\n    amount NUMERIC(10,2) NOT NULL,\n    status\
+    \ VARCHAR(32) NOT NULL DEFAULT 'PENDING',\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n\
+    );\n\nCREATE TABLE IF NOT EXISTS inventory (\n    product_id VARCHAR(64) PRIMARY\
+    \ KEY,\n    available_quantity INTEGER NOT NULL\n);\n\nCREATE TABLE IF NOT EXISTS\
+    \ payments (\n    id SERIAL PRIMARY KEY,\n    order_id INTEGER NOT NULL,\n   \
+    \ amount NUMERIC(10,2) NOT NULL,\n    status VARCHAR(32) NOT NULL,\n    created_at\
+    \ TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nINSERT INTO inventory(product_id,\
+    \ available_quantity)\nVALUES ('P1001', 100), ('P1002', 50), ('P1003', 75)\nON\
+    \ CONFLICT (product_id) DO NOTHING;\n"

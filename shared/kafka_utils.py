@@ -1,6 +1,7 @@
 import json
 import os
-from kafka import KafkaProducer, KafkaConsumer
+
+from kafka import KafkaConsumer, KafkaProducer
 
 BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:29092')
 

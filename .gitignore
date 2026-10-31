@@ -7,3 +7,6 @@ venv/
 .DS_Store
 .pytest_cache/
 postgres_data/
+
+.pytest_cache/
+__pycache__/

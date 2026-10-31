@@ -1,8 +1,10 @@
 import random
 import threading
 from datetime import datetime
+
 from fastapi import FastAPI
 from sqlalchemy import Column, DateTime, Integer, Numeric, String
+
 from shared.database import Base, SessionLocal, engine
 from shared.kafka_utils import create_consumer, create_producer, publish_event
 
